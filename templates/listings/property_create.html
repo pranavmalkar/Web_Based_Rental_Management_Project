@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Create Property{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-plus me-2"></i>Add New Property</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.city.label }}</label>
+                            {{ form.city }}
+                            {% if form.city.errors %}<div class="text-danger small">{{ form.city.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.address.label }}</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}<div class="text-danger small">{{ form.address.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+                    </div>
+                    
+                    <!-- MULTIPLE IMAGES UPLOAD -->
+                    <div class="mb-4">
+                        <label class="form-label"><i class="fas fa-images me-1"></i>Property Images</label>
+                        <input type="file" name="images" multiple class="form-control" accept="image/*">
+                        <div class="form-text">Upload multiple images (JPG, PNG - max 5MB each)</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.category.label }}</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.country.label }}</label>
+                            {{ form.country }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.price_per_night.label }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                {{ form.price_per_night }}
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.max_guests.label }}</label>
+                            {{ form.max_guests }}
+                        </div>
+                    </div>
+                    <div class="mb-4 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">{{ form.is_active.label }}</label>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'listings:owner_property_list' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-success">Create Property</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

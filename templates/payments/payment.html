@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Payment - RentalHub{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-credit-card me-2"></i>Complete Your Payment</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Booking Summary -->
+                    <div class="booking-summary mb-4 p-3 bg-light rounded">
+                        <h5 class="mb-3">Booking Summary</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Property:</strong> {{ booking.property.title }}</p>
+                                <p class="mb-1"><strong>Location:</strong> {{ booking.property.city }}, {{ booking.property.country }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Check-in:</strong> {{ booking.check_in|date:"M d, Y" }}</p>
+                                <p class="mb-1"><strong>Check-out:</strong> {{ booking.check_out|date:"M d, Y" }}</p>
+                                <p class="mb-1"><strong>Guests:</strong> {{ booking.guests }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">Total Amount:</span>
+                            <span class="h4 mb-0 text-primary fw-bold">₹{{ payment.amount }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <div class="payment-form">
+                        <h5 class="mb-3">Payment Details</h5>
+                        <form id="payment-form">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="text" class="form-control" placeholder="MM/YY">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">CVV</label>
+                                    <input type="text" class="form-control" placeholder="123" maxlength="4">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" class="form-control" placeholder="John Doe">
+                            </div>
+
+                            <button type="button" id="pay-btn" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-credit-card me-2"></i>Pay ₹{{ payment.amount }} (Add Razorpay Keys)
+                            </button>
+                        </form>
+                        <div id="payment-message" class="alert d-none mt-3" role="alert"></div>
+                    </div>
+
+                    <!-- Payment Integration -->
+                    {% if use_real_payment %}
+                    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+                    {% endif %}
+                    <script>
+                    document.getElementById('pay-btn').onclick = function(e) {
+                        e.preventDefault();
+
+                        {% if use_real_payment %}
+                        // Real Razorpay payment
+                        var options = {
+                            "key": "{{ key_id }}",
+                            "amount": "{{ amount }}",
+                            "currency": "{{ currency }}",
+                            "name": "RentalHub",
+                            "description": "Payment for {{ booking.property.title }}",
+                            "order_id": "{{ razorpay_order_id }}",
+                            "handler": function (response){
+                                // Handle success
+                                fetch('{% url "payments:payment_success" %}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                    },
+                                    body: JSON.stringify({
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_signature: response.razorpay_signature
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'success') {
+                                        window.location.href = '{% url "bookings:booking_detail" booking.id %}';
+                                    } else {
+                                        showMessage('Payment verification failed. Please contact support.', 'danger');
+                                    }
+                                });
+                            },
+                            "prefill": {
+                                "name": "{{ user.get_full_name|default:user.username }}",
+                                "email": "{{ user.email }}",
+                            },
+                            "theme": {
+                                "color": "#007bff"
+                            }
+                        };
+                        var rzp = new Razorpay(options);
+                        rzp.open();
+                        {% else %}
+                        // Mock payment for testing
+                        var btn = document.getElementById('pay-btn');
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Demo Payment...';
+
+                        // Simulate payment processing delay
+                        setTimeout(function() {
+                            // Simulate successful payment
+                            fetch('{% url "payments:payment_success" %}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                },
+                                body: JSON.stringify({
+                                    razorpay_payment_id: 'pay_mock_' + Math.random().toString(36).substr(2, 14),
+                                    razorpay_order_id: '{{ razorpay_order_id }}',
+                                    razorpay_signature: 'sig_mock_' + Math.random().toString(36).substr(2, 14)
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Demo Payment Successful!';
+                                    btn.classList.remove('btn-warning');
+                                    btn.classList.add('btn-success');
+                                    setTimeout(function() {
+                                        window.location.href = '{% url "bookings:booking_detail" booking.id %}';
+                                    }, 2000);
+                                } else {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="fas fa-times me-2"></i>Demo Payment Failed';
+                                    btn.classList.remove('btn-warning');
+                                    btn.classList.add('btn-danger');
+                                    showMessage('Demo payment failed: ' + (data.message || 'Unknown error'), 'danger');
+                                }
+                            })
+                            .catch(error => {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="fas fa-play-circle me-2"></i>Demo Pay ₹{{ payment.amount }} (Test Mode)';
+                                showMessage('Demo payment processing error.', 'danger');
+                            });
+                        }, 2000);
+                        {% endif %}
+                    };
+
+                    function showMessage(msg, type) {
+                        var el = document.getElementById('payment-message');
+                        el.className = 'alert alert-' + (type || 'info') + ' mt-3';
+                        el.textContent = msg;
+                        el.classList.remove('d-none');
+                        el.scrollIntoView({behavior: 'smooth'});
+                    }
+                    </script>
+                </div>
+            </div>
+
+            <!-- Payment Mode Notice -->
+            {% if not use_real_payment %}
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Ready for Real Payments:</strong> Replace the placeholder credentials in settings.py with your actual Razorpay test keys to enable real payment processing.
+                <br><small>Get your keys from <a href="https://dashboard.razorpay.com/app/keys" target="_blank">Razorpay Dashboard → API Keys</a></small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

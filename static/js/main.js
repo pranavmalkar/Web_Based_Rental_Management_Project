@@ -1,0 +1,1 @@
+// main.js removed — JavaScript stripped from project per user request

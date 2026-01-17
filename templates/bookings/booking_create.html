@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Book {{ property.title }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'listings:property_list' %}">Properties</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'listings:property_detail' property.pk %}">{{ property.title }}</a></li>
+                <li class="breadcrumb-item active">Booking</li>
+            </ol>
+        </nav>
+        
+        <div class="card shadow">
+            {% if property.main_image %}
+                <img src="{{ property.main_image }}" class="card-img-top" style="height: 300px; object-fit: cover;">
+            {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                    <i class="fas fa-building fa-5x text-muted"></i>
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <h4>{{ property.title }}</h4>
+                <p class="text-muted">{{ property.address }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow sticky-top" style="top: 100px;">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Booking Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">📅 Check-in Date</label>
+                        {{ form.check_in }}
+                        {% if form.check_in.errors %}
+                            <div class="text-danger small">{{ form.check_in.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">📅 Check-out Date</label>
+                        {{ form.check_out }}
+                        {% if form.check_out.errors %}
+                            <div class="text-danger small">{{ form.check_out.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">👥 Number of Guests</label>
+                        {{ form.guests }}
+                        {% if form.guests.errors %}
+                            <div class="text-danger small">{{ form.guests.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Total price will be calculated after selecting dates
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-lock me-2"></i>Confirm Booking
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.datepicker {
+    border: 2px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+.datepicker:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkinInput = document.querySelector('input[name="check_in"]');
+    const checkoutInput = document.querySelector('input[name="check_out"]');
+    
+    // Set today's date as minimum for check-in
+    const today = new Date().toISOString().split('T')[0];
+    checkinInput.min = today;
+    
+    // Update check-out min date when check-in changes
+    checkinInput.addEventListener('change', function() {
+        const checkinDate = new Date(this.value);
+        const tomorrow = new Date(checkinDate);
+        tomorrow.setDate(checkinDate.getDate() + 1);
+        checkoutInput.min = tomorrow.toISOString().split('T')[0];
+        
+        // Clear checkout if invalid
+        if (checkoutInput.value && checkoutInput.value < checkoutInput.min) {
+            checkoutInput.value = '';
+        }
+    });
+});
+</script>
+{% endblock %}

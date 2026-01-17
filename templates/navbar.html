@@ -1,0 +1,125 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-gradient shadow-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'home' %}">
+            <div class="brand-icon-wrapper">
+                <div class="brand-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div class="brand-glow"></div>
+            </div>
+            <span class="brand-text">RentalHub</span>
+            <div class="brand-shine"></div>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">
+                        <i class="fas fa-home me-2"></i>Home
+                        <span class="nav-indicator"></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'listings:property_list' %}">
+                        <i class="fas fa-search me-2"></i>Properties
+                        <span class="nav-indicator"></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about' %}">
+                        <i class="fas fa-info-circle me-2"></i>About
+                        <span class="nav-indicator"></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'contact' %}">
+                        <i class="fas fa-envelope me-2"></i>Contact
+                        <span class="nav-indicator"></span>
+                    </a>
+                </li>
+                {% if user.is_authenticated %}
+                    {% if user.is_owner %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:owner_dashboard' %}">
+                                <i class="fas fa-building me-1"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'listings:owner_property_list' %}">
+                                <i class="fas fa-list me-1"></i>My Properties
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if user.is_traveller %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:traveller_dashboard' %}">
+                                <i class="fas fa-calendar-check me-1"></i>My Bookings
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% if user.is_admin %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:admin_dashboard' %}">
+                                <i class="fas fa-cogs me-1"></i>Admin Panel
+                            </a>
+                        </li>
+                    {% endif %}
+                        {# Link to Django admin for staff/superuser users #}
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'admin:index' %}">
+                                    <i class="fas fa-user-shield me-1"></i>Admin
+                                </a>
+                            </li>
+                        {% endif %}
+                {% endif %}
+            </ul>
+            
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle user-dropdown" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-2"></i><span class="user-name">{{ user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'notifications:notification_list' %}">
+                                <i class="fas fa-bell me-2"></i>Notifications
+                            </a></li>
+                            <li>
+                                <form method="post" action="{% url 'accounts:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item logout-btn">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link login-link" href="{% url 'accounts:login' %}">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle signup-dropdown" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-plus me-2"></i>Signup
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:owner_signup' %}">
+                                <i class="fas fa-building me-2"></i>Property Owner
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:traveller_signup' %}">
+                                <i class="fas fa-plane me-2"></i>Traveller
+                            </a></li>
+                        </ul>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
